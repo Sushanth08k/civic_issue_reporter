@@ -217,6 +217,7 @@ dmypy.json
 *.sqlite3
 
 # Firebase
+frontend/src/firebaseConfig.js
 .firebase/
 firebase-debug.log
 firestore-debug.log

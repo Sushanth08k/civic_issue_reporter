@@ -58,12 +58,3 @@ This project is a full-stack civic issue reporting application focused on real-w
 2. Install TensorFlow and dependencies.
 3. Add labeled images under `ml/dataset/train` and `ml/dataset/val`.
 4. Run `python train.py` to create `models/civic_issue_classifier`.
-
-## Interview prep guide
-
-- Explain how React state lifts data from upload form to the dashboard.
-- Describe how FastAPI handles multipart file upload and returns JSON.
-- Explain transfer learning and why pretrained models reduce training time.
-- Compare Firebase Auth vs custom auth.
-- Discuss tradeoffs between serverless storage and self-hosted backend.
-- Describe the sequence: user uploads photo → frontend sends image to AI service → service predicts label → frontend stores complaint and shows status.

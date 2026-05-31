@@ -52,6 +52,13 @@ body, html, #root {
 .hero-ctas button { margin-right:0.6rem }
 .hero-graphic { font-size:2.5rem }
 
+.feature-highlights { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:1rem; margin-bottom:1.25rem }
+.feature-card { display:flex; gap:0.9rem; padding:1rem; background:white; border-radius:0.85rem; border:1px solid #e5e7eb; box-shadow:0 12px 30px rgba(15,23,42,0.08); transition:transform 0.2s ease, box-shadow 0.2s ease }
+.feature-card:hover { transform:translateY(-4px); box-shadow:0 18px 40px rgba(15,23,42,0.12) }
+.feature-icon { width:3rem; height:3rem; border-radius:1rem; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#22c55e); color:white; font-size:1.35rem }
+.feature-card h3 { margin:0 0 0.35rem 0; font-size:1rem }
+.feature-card p { margin:0; color:#4b5563; font-size:0.95rem }
+
 .hero-ctas .ghost { background:transparent; border:1px solid rgba(15,23,42,0.06); color: #111827 }
 
 .app-footer { margin-top:1.25rem; text-align:center; color:#6b7280; font-size:0.9rem }

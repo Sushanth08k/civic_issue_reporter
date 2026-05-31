@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { saveComplaint, updateComplaint } from '../firebaseConfig.js';
 import { uploadImageToCloudinary } from '../cloudinaryConfig.js';
+import { reverseGeocode } from '../utils/locationUtils.js';
 
 const ML_SERVICE_URL = 'http://localhost:8000/classify';
 
@@ -11,42 +12,6 @@ function UploadForm({ user }) {
   const [status, setStatus] = useState('');
   const [result, setResult] = useState(null);
   const [locationInput, setLocationInput] = useState('');
-
-  async function reverseGeocode(lat, lng) {
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`;
-      const response = await fetch(url, {
-        headers: {
-          Accept: 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Reverse geocoding failed');
-      }
-
-      const data = await response.json();
-      const address = data.address || {};
-      const label = data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-
-      return {
-        lat,
-        lng,
-        label,
-        area: address.suburb || address.neighbourhood || address.village || address.hamlet || null,
-        city: address.city || address.town || address.village || address.county || null,
-        state: address.state || null,
-        country: address.country || null,
-        postcode: address.postcode || null,
-      };
-    } catch (error) {
-      return {
-        lat,
-        lng,
-        label: `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
-      };
-    }
-  }
 
   async function requestLocation() {
     if (!navigator.geolocation) {
@@ -163,7 +128,14 @@ function UploadForm({ user }) {
 
       {location && (
         <div className="location-info">
-          Captured location: {location.label}
+          <strong>Captured location:</strong> {location.label}
+          {(location.city || location.state) && (
+            <div className="location-detail">
+              {location.city ? location.city : ''}
+              {location.city && location.state ? ', ' : ''}
+              {location.state || ''}
+            </div>
+          )}
         </div>
       )}
       {!location && locationInput && (

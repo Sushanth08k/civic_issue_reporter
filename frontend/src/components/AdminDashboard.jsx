@@ -5,6 +5,7 @@ import {
   addNoteToComplaint,
   getComplaintsByStatus,
 } from '../firebaseConfig.js';
+import { formatLocationLabel } from '../utils/locationUtils.js';
 
 function AdminDashboard({ complaints, user }) {
   const [filter, setFilter] = useState('all');
@@ -106,7 +107,7 @@ function AdminDashboard({ complaints, user }) {
 
               <p className="description">{complaint.description}</p>
               <p className="location">
-                📍 {complaint.location?.label || complaint.location?.address || (complaint.location?.lat ? `${complaint.location.lat.toFixed(5)}, ${complaint.location.lng.toFixed(5)}` : 'Unknown location')}
+                📍 {formatLocationLabel(complaint.location)}
               </p>
 
               {complaint.imageUrl && (

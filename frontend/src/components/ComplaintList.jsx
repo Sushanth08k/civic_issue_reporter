@@ -1,3 +1,5 @@
+import { formatLocationLabel } from '../utils/locationUtils.js';
+
 function ComplaintList({ complaints }) {
   if (!complaints?.length) {
     return <div className="empty-state">No complaints found yet.</div>;
@@ -14,7 +16,7 @@ function ComplaintList({ complaints }) {
           </div>
           <p>{complaint.description}</p>
           <p>
-            Location: {complaint.location?.label || complaint.location?.address || (complaint.location?.lat ? `${complaint.location.lat.toFixed(5)}, ${complaint.location.lng.toFixed(5)}` : 'Unknown')}
+            Location: {formatLocationLabel(complaint.location)}
           </p>
           <a href={complaint.imageUrl} target="_blank" rel="noreferrer">
             View image

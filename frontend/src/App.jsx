@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import UploadForm from './components/UploadForm.jsx';
 import ComplaintList from './components/ComplaintList.jsx';
 import AdminDashboard from './components/AdminDashboard.jsx';
+import FeatureHighlights from './components/FeatureHighlights.jsx';
 import { initFirebase, auth, signInAnonymously, getComplaints, getAdminStatus } from './firebaseConfig.js';
 
 function App() {
@@ -85,6 +86,8 @@ function App() {
             </div>
             <div className="hero-graphic">🗺️</div>
           </section>
+
+          <FeatureHighlights />
 
           <section className="content-area">
             {view === 'report' && <UploadForm user={user} />}

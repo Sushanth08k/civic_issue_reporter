@@ -179,6 +179,24 @@ button:hover {
   margin-top: 1rem;
 }
 
+.location-info {
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.location-detail {
+  margin-top: 0.35rem;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.complaint-card .location,
+.admin-card .location {
+  margin-top: 0.75rem;
+  color: #475569;
+}
+
 .empty-state {
   padding: 1rem;
   color: #6b7280;

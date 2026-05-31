@@ -48,6 +48,8 @@ This project is a full-stack civic issue reporting application focused on real-w
 4. Run `npm run dev`.
 5. Open the app in your browser at `http://localhost:5173`.
 
+> Captured coordinates are now reverse geocoded into friendly location labels (area, city, state) for better report visibility.
+
 ### Backend
 1. Open `backend`.
 2. Run `python -m venv .venv` and activate it.

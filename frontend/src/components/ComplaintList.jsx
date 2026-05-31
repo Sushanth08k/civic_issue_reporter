@@ -14,7 +14,7 @@ function ComplaintList({ complaints }) {
           </div>
           <p>{complaint.description}</p>
           <p>
-            Location: {complaint.location?.lat?.toFixed(5)}, {complaint.location?.lng?.toFixed(5)}
+            Location: {complaint.location?.label || complaint.location?.address || (complaint.location?.lat ? `${complaint.location.lat.toFixed(5)}, ${complaint.location.lng.toFixed(5)}` : 'Unknown')}
           </p>
           <a href={complaint.imageUrl} target="_blank" rel="noreferrer">
             View image

@@ -106,8 +106,7 @@ function AdminDashboard({ complaints, user }) {
 
               <p className="description">{complaint.description}</p>
               <p className="location">
-                📍 {complaint.location?.lat?.toFixed(5)},{' '}
-                {complaint.location?.lng?.toFixed(5)}
+                📍 {complaint.location?.label || complaint.location?.address || (complaint.location?.lat ? `${complaint.location.lat.toFixed(5)}, ${complaint.location.lng.toFixed(5)}` : 'Unknown location')}
               </p>
 
               {complaint.imageUrl && (

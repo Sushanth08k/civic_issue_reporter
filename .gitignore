@@ -34,13 +34,13 @@ venv/
 ENV/
 env/
 
-# ML Models and Data (uncomment to ignore)
-# backend/models/
-# ml/dataset/
-# *.h5
-# *.keras
-# *.pkl
-# *.joblib
+# ML Models and Data
+backend/models/
+ml/dataset/
+*.h5
+*.keras
+*.pkl
+*.joblib
 
 # Node.js
 frontend/node_modules/

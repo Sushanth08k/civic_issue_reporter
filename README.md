@@ -44,14 +44,16 @@ This project is a full-stack civic issue reporting application focused on real-w
 ### Frontend
 1. Open `frontend`.
 2. Run `npm install`.
-3. Create Firebase project and configure `frontend/src/firebaseConfig.js`.
+3. Create a Firebase project and configure `frontend/src/firebaseConfig.js`.
 4. Run `npm run dev`.
+5. Open the app in your browser at `http://localhost:5173`.
 
 ### Backend
 1. Open `backend`.
 2. Run `python -m venv .venv` and activate it.
 3. Run `pip install -r requirements.txt`.
 4. Start with `uvicorn app:app --reload --host 0.0.0.0 --port 8000`.
+5. Visit `http://localhost:8000/docs` to inspect the FastAPI endpoints.
 
 ### ML training
 1. Open `ml`.

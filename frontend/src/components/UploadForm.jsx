@@ -12,6 +12,42 @@ function UploadForm({ user }) {
   const [result, setResult] = useState(null);
   const [locationInput, setLocationInput] = useState('');
 
+  async function reverseGeocode(lat, lng) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`;
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Reverse geocoding failed');
+      }
+
+      const data = await response.json();
+      const address = data.address || {};
+      const label = data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+      return {
+        lat,
+        lng,
+        label,
+        area: address.suburb || address.neighbourhood || address.village || address.hamlet || null,
+        city: address.city || address.town || address.village || address.county || null,
+        state: address.state || null,
+        country: address.country || null,
+        postcode: address.postcode || null,
+      };
+    } catch (error) {
+      return {
+        lat,
+        lng,
+        label: `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+      };
+    }
+  }
+
   async function requestLocation() {
     if (!navigator.geolocation) {
       setStatus('Geolocation API not supported by this browser.');
@@ -20,12 +56,13 @@ function UploadForm({ user }) {
 
     setStatus('Requesting location...');
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-        setStatus('Location captured.');
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setStatus('Capturing address from coordinates...');
+        const place = await reverseGeocode(lat, lng);
+        setLocation(place);
+        setStatus(`Location captured: ${place.label}`);
       },
       (error) => {
         setStatus(`Location error: ${error.message}`);
@@ -67,7 +104,7 @@ function UploadForm({ user }) {
       issueType: payload.prediction,
       description,
       location: locationPayload,
-      locationText: locationInput,
+      locationText: location?.label || locationInput,
       complaintLetter: payload.letter,
       status: 'Submitted',
       createdAt: new Date().toISOString(),
@@ -126,7 +163,7 @@ function UploadForm({ user }) {
 
       {location && (
         <div className="location-info">
-          Captured location: {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
+          Captured location: {location.label}
         </div>
       )}
       {!location && locationInput && (
@@ -148,3 +185,5 @@ function UploadForm({ user }) {
 }
 
 export default UploadForm;
+
+

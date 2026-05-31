@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 import cv2
 
-CLASS_NAMES = ['normal', 'potholes']
+CLASS_NAMES = ['Pothole', 'Garbage Dump']
 MODEL_PATH = 'models/civic_issue_classifier.keras'
 
 
@@ -43,7 +43,7 @@ def predict_issue(image_bytes):
     processed = preprocess_image(image_bytes)
     mean_brightness = float(np.mean(processed))
     if mean_brightness < 0.4:
-        return 'potholes'
+        return 'Pothole'
     if mean_brightness > 0.7:
-        return 'normal'
-    return 'potholes'
+        return 'Garbage Dump'
+    return 'Pothole'

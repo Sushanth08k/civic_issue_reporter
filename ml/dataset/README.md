@@ -9,7 +9,7 @@ For the current prototype, we are using two classes:
 
 The `Broken Streetlight` class is planned for later once that dataset is available.
 
-The training script `ml/train.py` uses `ImageDataGenerator` to load images from this directory.
+The training script `ml/train.py` loads images recursively from these directories and trains a binary classifier for the two classes.
 
 Because you are training without GPU support, use a limited subset of images:
 

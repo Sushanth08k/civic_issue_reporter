@@ -10,6 +10,7 @@ function UploadForm({ user }) {
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('');
   const [result, setResult] = useState(null);
+  const [locationInput, setLocationInput] = useState('');
 
   async function requestLocation() {
     if (!navigator.geolocation) {
@@ -34,8 +35,8 @@ function UploadForm({ user }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!file || !location) {
-      setStatus('Please attach a photo and capture location first.');
+    if (!file || (!location && !locationInput)) {
+      setStatus('Please attach a photo and provide or capture location first.');
       return;
     }
 
@@ -57,11 +58,16 @@ function UploadForm({ user }) {
     setResult(payload);
     setStatus('Classification complete. Saving complaint...');
 
+    const locationPayload = location
+      ? location
+      : { address: locationInput };
+
     const complaint = {
       userId: user?.uid || 'anonymous',
       issueType: payload.prediction,
       description,
-      location,
+      location: locationPayload,
+      locationText: locationInput,
       complaintLetter: payload.letter,
       status: 'Submitted',
       createdAt: new Date().toISOString(),
@@ -101,6 +107,16 @@ function UploadForm({ user }) {
           />
         </label>
 
+        <label>
+          Location (optional)
+          <input
+            type="text"
+            value={locationInput}
+            onChange={(event) => setLocationInput(event.target.value)}
+            placeholder="Enter address or landmark"
+          />
+        </label>
+
         <button type="button" onClick={requestLocation}>
           Capture Location
         </button>
@@ -111,6 +127,11 @@ function UploadForm({ user }) {
       {location && (
         <div className="location-info">
           Captured location: {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
+        </div>
+      )}
+      {!location && locationInput && (
+        <div className="location-info">
+          Entered location: {locationInput}
         </div>
       )}
 

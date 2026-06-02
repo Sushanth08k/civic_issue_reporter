@@ -2,6 +2,9 @@ import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
   signInAnonymously as firebaseSignInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
 } from 'firebase/auth';
 import {
   getFirestore,
@@ -47,10 +50,54 @@ export async function signInAnonymously() {
   }
 }
 
+export async function signOutUser() {
+  try {
+    await firebaseSignOut(getAuth());
+  } catch (error) {
+    console.error('Firebase sign out failed', error);
+    throw error;
+  }
+}
+
+export async function createUserProfile(userId, email, role = 'user') {
+  const userDoc = doc(db, 'users', userId);
+  await setDoc(
+    userDoc,
+    {
+      email,
+      role,
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+}
+
+export async function signUpUser(email, password) {
+  const auth = getAuth();
+  const result = await createUserWithEmailAndPassword(auth, email, password);
+  await createUserProfile(result.user.uid, email, 'user');
+  return result.user;
+}
+
+export async function signInUser(email, password) {
+  const auth = getAuth();
+  const result = await signInWithEmailAndPassword(auth, email, password);
+  return result.user;
+}
+
 export async function saveComplaint(complaint) {
   const complaintsRef = collection(db, 'complaints');
   const docRef = await addDoc(complaintsRef, complaint);
   return docRef.id;
+}
+
+export async function getUserRole(userId) {
+  const userDoc = await getDoc(doc(db, 'users', userId));
+  if (!userDoc.exists()) {
+    return null;
+  }
+  return userDoc.data()?.role || null;
 }
 
 export async function updateComplaint(complaintId, data) {
@@ -61,6 +108,18 @@ export async function updateComplaint(complaintId, data) {
 export async function getComplaints() {
   const complaintsRef = collection(db, 'complaints');
   const q = query(complaintsRef, orderBy('createdAt', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
+export async function getComplaintsByUser(userId) {
+  if (!userId) return [];
+  const complaintsRef = collection(db, 'complaints');
+  const q = query(
+    complaintsRef,
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc')
+  );
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
@@ -102,7 +161,8 @@ export async function updateComplaintStatus(complaintId, newStatus) {
 export async function assignComplaint(complaintId, adminId, adminName) {
   const complaintDoc = doc(db, 'complaints', complaintId);
   await updateDoc(complaintDoc, {
-    assignedTo: adminId,
+    assignedTo: adminName || adminId,
+    assignedBy: adminId,
     updatedAt: new Date().toISOString(),
   });
 }

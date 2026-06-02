@@ -12,6 +12,7 @@ function ComplaintList({ complaints }) {
         <article key={complaint.id} className="complaint-card">
           <div className="top-row">
             <span className="issue-type">{complaint.issueType}</span>
+            <span className="severity-tag">{complaint.severity}</span>
             <span className="status-tag">{complaint.status}</span>
           </div>
           <p>{complaint.description}</p>

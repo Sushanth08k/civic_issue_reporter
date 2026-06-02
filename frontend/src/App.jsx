@@ -2,24 +2,49 @@ import { useEffect, useState } from 'react';
 import UploadForm from './components/UploadForm.jsx';
 import ComplaintList from './components/ComplaintList.jsx';
 import AdminDashboard from './components/AdminDashboard.jsx';
+import AuthPanel from './components/AuthPanel.jsx';
 import FeatureHighlights from './components/FeatureHighlights.jsx';
-import { initFirebase, auth, signInAnonymously, getComplaints, getAdminStatus } from './firebaseConfig.js';
+import {
+  initFirebase,
+  auth,
+  signInAnonymously,
+  signUpUser,
+  signInUser,
+  signOutUser,
+  getComplaints,
+  getComplaintsByUser,
+  getAdminStatus,
+  getUserRole,
+} from './firebaseConfig.js';
 
 function App() {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [view, setView] = useState('report');
   const [complaints, setComplaints] = useState([]);
+  const [authError, setAuthError] = useState('');
 
   useEffect(() => {
     initFirebase();
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
+        if (currentUser.isAnonymous) {
+          setIsAdmin(false);
+          setComplaints([]);
+          return;
+        }
+
         const adminStatus = await getAdminStatus(currentUser.uid);
         setIsAdmin(adminStatus);
-        const complaintData = await getComplaints();
-        setComplaints(complaintData);
+
+        if (adminStatus) {
+          const complaintData = await getComplaints();
+          setComplaints(complaintData);
+        } else {
+          const myComplaints = await getComplaintsByUser(currentUser.uid);
+          setComplaints(myComplaints);
+        }
       }
     });
 
@@ -29,6 +54,59 @@ function App() {
 
     return unsubscribe;
   }, []);
+
+  async function handleUserSignUp(email, password) {
+    try {
+      setAuthError('');
+      await signUpUser(email, password);
+      setView('track');
+    } catch (error) {
+      setAuthError(error.message || 'Failed to sign up');
+    }
+  }
+
+  async function handleUserSignIn(email, password) {
+    try {
+      setAuthError('');
+      const signedInUser = await signInUser(email, password);
+      const role = await getUserRole(signedInUser.uid);
+      if (role === 'admin') {
+        await signOutUser();
+        setAuthError('Admin must sign in through the admin login form.');
+        return;
+      }
+      setView('track');
+    } catch (error) {
+      setAuthError(error.message || 'Failed to sign in');
+    }
+  }
+
+  async function handleAdminSignIn(email, password) {
+    try {
+      setAuthError('');
+      const signedInUser = await signInUser(email, password);
+      const role = await getUserRole(signedInUser.uid);
+      if (role !== 'admin') {
+        await signOutUser();
+        setAuthError('Only admin users can sign in here.');
+        return;
+      }
+      setView('admin');
+    } catch (error) {
+      setAuthError(error.message || 'Failed to sign in');
+    }
+  }
+
+  async function handleSignOut() {
+    try {
+      await signOutUser();
+      setView('report');
+      setAuthError('');
+      signInAnonymously();
+    } catch (error) {
+      setAuthError(error.message || 'Sign out failed');
+    }
+  }
 
   return (
     <div className="app-shell enhanced">
@@ -42,11 +120,23 @@ function App() {
         </div>
 
         <div className="header-actions">
-          <div className="user-info">{user ? `User: ${user.uid.slice(0,6)}...` : 'Not signed in'}</div>
+          <div className="user-info">
+            {user?.email
+              ? `Signed in: ${user.email}`
+              : user?.uid
+              ? `Guest: ${user.uid.slice(0, 6)}...`
+              : 'Not signed in'}
+          </div>
           <nav className="top-nav">
             <button className={view === 'report' ? 'active' : ''} onClick={() => setView('report')}>Report</button>
             <button className={view === 'track' ? 'active' : ''} onClick={() => setView('track')}>My Complaints</button>
             {isAdmin && <button className={view === 'admin' ? 'active' : ''} onClick={() => setView('admin')}>Admin</button>}
+            {!user?.email && (
+              <button className={view === 'auth' ? 'active' : ''} onClick={() => setView('auth')}>Login / Signup</button>
+            )}
+            {user?.email && (
+              <button className="ghost" onClick={handleSignOut}>Logout</button>
+            )}
           </nav>
         </div>
       </header>
@@ -59,7 +149,7 @@ function App() {
               <div className="stat-label">Total Reports</div>
             </div>
             <div className="stat">
-              <div className="stat-value">{complaints.filter(c => c.status === 'Resolved').length}</div>
+              <div className="stat-value">{complaints.filter((c) => c.status === 'Resolved').length}</div>
               <div className="stat-label">Resolved</div>
             </div>
           </div>
@@ -92,6 +182,15 @@ function App() {
           <section className="content-area">
             {view === 'report' && <UploadForm user={user} />}
             {view === 'track' && <ComplaintList complaints={complaints} />}
+            {view === 'auth' && (
+              <AuthPanel
+                user={user}
+                authError={authError}
+                onUserSignUp={handleUserSignUp}
+                onUserSignIn={handleUserSignIn}
+                onAdminSignIn={handleAdminSignIn}
+              />
+            )}
             {view === 'admin' && isAdmin && <AdminDashboard complaints={complaints} user={user} />}
           </section>
         </main>

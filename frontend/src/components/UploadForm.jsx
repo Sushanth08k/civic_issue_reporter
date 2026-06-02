@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { saveComplaint, updateComplaint } from '../firebaseConfig.js';
+import PropTypes from 'prop-types';
+import { saveComplaint } from '../firebaseConfig.js';
 import { uploadImageToCloudinary } from '../cloudinaryConfig.js';
 import { reverseGeocode } from '../utils/locationUtils.js';
 
@@ -9,6 +10,7 @@ function UploadForm({ user }) {
   const [file, setFile] = useState(null);
   const [location, setLocation] = useState(null);
   const [description, setDescription] = useState('');
+  const [severity, setSeverity] = useState('Pothole');
   const [status, setStatus] = useState('');
   const [result, setResult] = useState(null);
   const [locationInput, setLocationInput] = useState('');
@@ -42,49 +44,54 @@ function UploadForm({ user }) {
       return;
     }
 
-    setStatus('Sending image to AI service...');
-    const formData = new FormData();
-    formData.append('image', file);
+    try {
+      setStatus('Sending image to AI service...');
+      const formData = new FormData();
+      formData.append('image', file);
 
-    const response = await fetch(ML_SERVICE_URL, {
-      method: 'POST',
-      body: formData,
-    });
+      const response = await fetch(ML_SERVICE_URL, {
+        method: 'POST',
+        body: formData,
+      });
 
-    if (!response.ok) {
-      setStatus('AI service failed. Check the backend logs.');
-      return;
+      if (!response.ok) {
+        throw new Error('AI service failed. Check the backend logs.');
+      }
+
+      const payload = await response.json();
+      setResult(payload);
+      setStatus('Classification complete. Uploading image...');
+
+      const imageUrl = await uploadImageToCloudinary(file);
+      setStatus('Saving complaint...');
+
+      const locationPayload = location
+        ? location
+        : { address: locationInput };
+
+      const complaint = {
+        userId: user?.uid || 'anonymous',
+        issueType: payload.prediction,
+        severity,
+        description,
+        location: locationPayload,
+        locationText: location?.label || locationInput,
+        complaintLetter: payload.letter,
+        status: 'Submitted',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        resolvedAt: null,
+        imageUrl,
+        assignedTo: null,
+        notes: [],
+      };
+
+      await saveComplaint(complaint);
+      setStatus('Complaint saved successfully.');
+    } catch (error) {
+      console.error('Complaint save failed:', error);
+      setStatus(`Save failed: ${error.message}`);
     }
-
-    const payload = await response.json();
-    setResult(payload);
-    setStatus('Classification complete. Saving complaint...');
-
-    const locationPayload = location
-      ? location
-      : { address: locationInput };
-
-    const complaint = {
-      userId: user?.uid || 'anonymous',
-      issueType: payload.prediction,
-      description,
-      location: locationPayload,
-      locationText: location?.label || locationInput,
-      complaintLetter: payload.letter,
-      status: 'Submitted',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      resolvedAt: null,
-      imageUrl: '',
-      assignedTo: null,
-      notes: [],
-    };
-
-    const complaintId = await saveComplaint(complaint);
-    const imageUrl = await uploadImageToCloudinary(file);
-    await updateComplaint(complaintId, { imageUrl });
-
-    setStatus('Complaint saved successfully.');
   }
 
   return (
@@ -107,6 +114,14 @@ function UploadForm({ user }) {
             onChange={(event) => setDescription(event.target.value)}
             placeholder="Describe the issue in a few words"
           />
+        </label>
+
+        <label>
+          Issue category
+          <select value={severity} onChange={(event) => setSeverity(event.target.value)}>
+            <option value="Pothole">Pothole</option>
+            <option value="Garbage">Garbage</option>
+          </select>
         </label>
 
         <label>
@@ -155,6 +170,13 @@ function UploadForm({ user }) {
     </section>
   );
 }
+
+UploadForm.propTypes = {
+  user: PropTypes.shape({
+    uid: PropTypes.string,
+    email: PropTypes.string,
+  }),
+};
 
 export default UploadForm;
 

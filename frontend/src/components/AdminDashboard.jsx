@@ -1,9 +1,9 @@
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 import {
   updateComplaintStatus,
   assignComplaint,
   addNoteToComplaint,
-  getComplaintsByStatus,
 } from '../firebaseConfig.js';
 import { formatLocationLabel } from '../utils/locationUtils.js';
 
@@ -29,6 +29,23 @@ function AdminDashboard({ complaints, user }) {
     } catch (error) {
       console.error('Error updating status:', error);
       alert('Failed to update status');
+    }
+    setLoading((prev) => ({ ...prev, [complaintId]: false }));
+  }
+
+  async function handleAssign(complaintId) {
+    setLoading((prev) => ({ ...prev, [complaintId]: true }));
+    try {
+      await assignComplaint(
+        complaintId,
+        user?.uid || 'admin',
+        user?.displayName || 'Admin'
+      );
+      alert('Complaint assigned to you');
+      window.location.reload();
+    } catch (error) {
+      console.error('Error assigning complaint:', error);
+      alert('Failed to assign complaint');
     }
     setLoading((prev) => ({ ...prev, [complaintId]: false }));
   }
@@ -91,6 +108,7 @@ function AdminDashboard({ complaints, user }) {
               <div className="card-header">
                 <div>
                   <span className="issue-type">{complaint.issueType}</span>
+                  <span className="severity-tag">{complaint.severity}</span>
                   <span className="status-tag">{complaint.status}</span>
                 </div>
                 <button
@@ -181,6 +199,13 @@ function AdminDashboard({ complaints, user }) {
                       <strong>Assigned to:</strong>{' '}
                       {complaint.assignedTo || 'Unassigned'}
                     </p>
+                    <button
+                      className="assign-btn"
+                      onClick={() => handleAssign(complaint.id)}
+                      disabled={loading[complaint.id]}
+                    >
+                      {complaint.assignedTo ? 'Reassign to me' : 'Assign to me'}
+                    </button>
                     <p>
                       <strong>Created:</strong>{' '}
                       {new Date(complaint.createdAt).toLocaleString()}
@@ -201,6 +226,14 @@ function AdminDashboard({ complaints, user }) {
     </section>
   );
 }
+
+AdminDashboard.propTypes = {
+  complaints: PropTypes.arrayOf(PropTypes.object).isRequired,
+  user: PropTypes.shape({
+    uid: PropTypes.string,
+    displayName: PropTypes.string,
+  }),
+};
 
 export default AdminDashboard;
 
